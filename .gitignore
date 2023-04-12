@@ -1,0 +1,7 @@
+*.egg-info/
+.coverage
+.dmypy.json
+.eggs/*
+.ipynb_checkpoints/
+__pycache__/
+dist/
