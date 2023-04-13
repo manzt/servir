@@ -8,4 +8,4 @@ try:
 except PackageNotFoundError:
     __version__ = "uninstalled"
 
-from bg_server._provide import Provider # noqa
+from bg_server._provide import Provider, FileProviderMount # noqa
