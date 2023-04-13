@@ -1,6 +1,7 @@
 from __future__ import annotations
-import dataclasses
 
+import dataclasses
+import functools
 import hashlib
 import mimetypes
 import os
@@ -13,23 +14,50 @@ from starlette.middleware.cors import CORSMiddleware
 from starlette.requests import Request
 from starlette.responses import FileResponse, Response, StreamingResponse
 from starlette.routing import BaseRoute, Mount, Route
+from starlette.types import ASGIApp, Receive, Scope, Send
 
 from bg_server._background_server import BackgroundServer
-from bg_server._protocols import (
-    ProviderProtocol,
-    ResourceManagerProtocol,
-    get_resources,
-    resource_middleware,
-)
+from bg_server._protocols import ProviderProtocol, ResourceManagerProtocol
 
 __all__ = [
-    "FileResource",
-    "FileResourceManager",
-    "file_route",
-    "ContentResource",
-    "ContentResourceManager",
-    "content_route",
+    "ContentProviderMount",
+    "FileProviderMount",
+    "Provider",
+    "ProviderMount",
+    "get_resources",
 ]
+
+_RESOURCE_KEY = "_bg_server_resources"
+
+
+@dataclasses.dataclass(frozen=True)
+class ProviderMount:
+    path: str
+    routes: typing.Sequence[BaseRoute]
+    manager: ResourceManagerProtocol
+
+
+def mount_from_provider_mount(provider_mount: ProviderMount) -> Mount:
+    """Create a Mount from a ProviderMount."""
+
+    def middleware(app: ASGIApp):
+        @functools.wraps(app)
+        async def wrapped_app(scope: Scope, receive: Receive, send: Send):
+            scope[_RESOURCE_KEY] = provider_mount.manager.resources
+            await app(scope, receive, send)
+
+        return wrapped_app
+
+    return Mount(
+        path=provider_mount.path,
+        routes=provider_mount.routes,
+        middleware=[(middleware, {})],  # type: ignore
+    )
+
+
+def get_resources(request: Request) -> typing.MutableMapping[str, typing.Any]:
+    """Get the resources from the request scope."""
+    return request.scope[_RESOURCE_KEY]
 
 
 def md5(data: str | bytes) -> str:
@@ -163,7 +191,7 @@ class FileResourceManager(ResourceManagerProtocol[FileResource]):
 
 
 def file_endpoint(request: Request):
-    resources: typing.MutableMapping[str, FileResource] = get_resources(request.scope)
+    resources: typing.MutableMapping[str, FileResource] = get_resources(request)
     resource = resources[request.path_params["guid"]]
 
     path = resource.path
@@ -191,9 +219,6 @@ def file_endpoint(request: Request):
     return FileResponse(path, media_type=media_type)
 
 
-file_route = Route("/{guid:path}", file_endpoint)
-
-
 class ContentResource:
     def __init__(
         self, provider: ProviderProtocol, contents: str | bytes, extension: str = ""
@@ -211,31 +236,20 @@ class ContentResourceManager(ResourceManagerProtocol[ContentResource]):
     def __init__(self):
         self.resources = weakref.WeakValueDictionary()
 
-    def create(
-        self, provider: ProviderProtocol, obj: str | bytes, **kwargs
-    ) -> ContentResource:
+    def create(self, provider: ProviderProtocol, obj: str, **kwargs) -> ContentResource:
         resource = ContentResource(provider, obj, **kwargs)
         self.resources[resource.guid] = resource
         return resource
 
     def handles(self, obj: object) -> bool:
-        return isinstance(obj, (str, bytes))
+        return isinstance(obj, str)
 
 
 def content_endpoint(request: Request):
-    resources: typing.MutableMapping[str, ContentResource] = get_resources(request.scope)
+    resources: typing.MutableMapping[str, ContentResource] = get_resources(request)
     resource = resources[request.path_params["guid"]]
-    mime_type = mimetypes.guess_type(resource.guid)[0]
-    if mime_type is None:
-        mime_type = (
-            "application/octet-stream"
-            if isinstance(resource.contents, bytes)
-            else "text/plain"
-        )
+    mime_type = mimetypes.guess_type(resource.guid)[0] or "text/plain"
     return Response(resource.contents, media_type=mime_type)
-
-
-content_route = Route("/{guid:path}", content_endpoint)
 
 
 @dataclasses.dataclass
@@ -247,28 +261,36 @@ class ProviderContext:
     def url(self) -> str:
         return f"{self.provider.url}{self.scope}"
 
+class FileProviderMount(ProviderMount):
+    def __init__(self, path: str = "/files"):
+        super().__init__(
+            path=path,
+            routes=[Route("/{guid:path}", file_endpoint)],
+            manager=FileResourceManager(),
+        )
+
+
+class ContentProviderMount(ProviderMount):
+    def __init__(self, path: str = "/contents"):
+        super().__init__(
+            path=path,
+            routes=[Route("/{guid:path}", content_endpoint)],
+            manager=ContentResourceManager(),
+        )
+
 class Provider:
     """A server that provides resources to a client."""
 
     def __init__(
         self,
-        extensions: typing.Sequence[ProviderMount],
+        routes: typing.Sequence[ProviderMount],
         allowed_origins: list[str] | None = None,
         proxy: bool = False,
     ):
         if allowed_origins is None:
             allowed_origins = ["*"]
 
-        app = Starlette(
-            routes=[
-                Mount(
-                    path=m.path,
-                    routes=m.routes,
-                    middleware=[(resource_middleware(m.manager.resources), {})],  # type: ignore
-                )
-                for m in extensions
-            ]
-        )
+        app = Starlette(routes=[mount_from_provider_mount(route) for route in routes])
         if allowed_origins:
             app.add_middleware(
                 CORSMiddleware,
@@ -280,13 +302,14 @@ class Provider:
 
         self._proxy = proxy
         self._bg_server = BackgroundServer(app)
-        self._extensions = extensions
+        self._routes = routes
 
-    def create(self, obj: object):
-        for ext in self._extensions:
+    def create(self, obj: object, **kwargs):
+        self._bg_server.start()
+        for ext in self._routes:
             if ext.manager.handles(obj):
-                self._bg_server.start()
-                return ext.manager.create(ProviderContext(self, ext.path), obj)
+                context = ProviderContext(self, ext.path)
+                return ext.manager.create(context, obj, **kwargs)
         raise ValueError(f"Cannot create resource for {obj}")
 
     @property
@@ -303,17 +326,3 @@ class Provider:
 
         return f"http://localhost:{port}"
 
-
-@dataclasses.dataclass
-class ProviderMount:
-    path: str
-    routes: typing.Sequence[BaseRoute]
-    manager: ResourceManagerProtocol
-
-
-class FileProviderMount(ProviderMount):
-    path: str = "/files"
-    routes: typing.Sequence[BaseRoute] = [file_route]
-    manager: ResourceManagerProtocol = dataclasses.field(
-        default_factory=FileResourceManager
-    )

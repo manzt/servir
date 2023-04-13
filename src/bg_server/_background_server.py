@@ -4,26 +4,26 @@ import threading
 import time
 
 import portpicker
-import starlette.applications
 import uvicorn
+from starlette.types import ASGIApp
 
 
 class BackgroundServer:
     """A threading-based background server for Starlette apps."""
 
-    _app: starlette.applications.Starlette
+    _app: ASGIApp
     _port: int | None
     _server_thread: threading.Thread | None
     _server: uvicorn.Server | None
 
-    def __init__(self, app: starlette.applications.Starlette):
+    def __init__(self, app: ASGIApp):
         self._app = app
         self._port = None
         self._server_thread = None
         self._server = None
 
     @property
-    def app(self) -> starlette.applications.Starlette:
+    def app(self) -> ASGIApp:
         return self._app
 
     @property
