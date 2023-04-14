@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import dataclasses
 import functools
-import hashlib
 import mimetypes
 import os
 import pathlib
@@ -12,12 +11,13 @@ import weakref
 from starlette.applications import Starlette
 from starlette.middleware.cors import CORSMiddleware
 from starlette.requests import Request
-from starlette.responses import FileResponse, Response, StreamingResponse
+from starlette.responses import FileResponse, Response
 from starlette.routing import BaseRoute, Mount, Route
 from starlette.types import ASGIApp, Receive, Scope, Send
 
 from bg_server._background_server import BackgroundServer
 from bg_server._protocols import ProviderProtocol, ResourceManagerProtocol
+from bg_server._util import hash_path, md5, StreamingFileResponse, ContentRange
 
 __all__ = [
     "ContentProviderMount",
@@ -60,110 +60,6 @@ def get_resources(request: Request) -> typing.MutableMapping[str, typing.Any]:
     return request.scope[_RESOURCE_KEY]
 
 
-def md5(data: str | bytes) -> str:
-    """Hash a string to a string.
-
-    This is used to generate a unique identifier for a string resource.
-
-    Parameters
-    ----------
-    string : str
-        The string to hash.
-
-    Returns
-    -------
-    str :
-        A unique identifier for the string.
-    """
-    if isinstance(data, str):
-        data = data.encode()
-    return hashlib.md5(data).hexdigest()
-
-
-def hash_path(path: pathlib.Path) -> str:
-    """Hash a path to a string.
-
-    This is used to generate a unique identifier for a file resource.
-
-    Parameters
-    ----------
-    path : pathlib.Path
-        The path to hash.
-
-    Returns
-    -------
-    str :
-        A unique identifier for the path.
-    """
-    return md5(path.resolve().as_posix()) + path.suffix
-
-
-# adapted from https://gist.github.com/tombulled/712fd8e19ed0618c5f9f7d5f5f543782
-def ranged(
-    file: typing.IO[bytes],
-    start: int = 0,
-    end: None | int = None,
-    block_size: int = 65535,
-) -> typing.Generator[bytes, None, None]:
-    """Read content range as generator from file object.
-
-    Parameters
-    ----------
-    file : IO[bytes]
-        The file object to read from.
-    start : int, optional
-        The start of the byte-range (default 0)
-    end : None | int, optional
-        The end of the desired byte-range. If None, the end of the file is assumed.
-    block_size : int, optional
-        The block size to read, by default 65535
-
-    Yields
-    ------
-    bytes
-        The content range.
-    """
-    consumed = 0
-    file.seek(start)
-
-    while True:
-        data_length = min(block_size, end - start - consumed) if end else block_size
-        if data_length <= 0:
-            break
-        data = file.read(data_length)
-        if not data:
-            break
-        consumed += data_length
-        yield data
-
-    if hasattr(file, "close"):
-        file.close()
-
-
-def parse_content_range(content_range: str, file_size: int) -> tuple[int, int]:
-    """Parse 'Range' header into integer interval.
-
-    Parameters
-    ----------
-    content_range : str
-        The 'Range' header.
-    file_size : int
-        The size of the file.
-
-    Returns
-    -------
-    tuple[int, int]
-        The start and end of the byte-range.
-    """
-    content_range = content_range.strip().lower()
-    content_ranges = content_range.split("=")[-1]
-    range_start, range_end, *_ = map(str.strip, (content_ranges + "-").split("-"))
-    return (
-        max(0, int(range_start)) if range_start else 0,
-        min(file_size - 1, int(range_end)) if range_end else file_size - 1,
-    )
-
-
 class FileResource:
     def __init__(self, provider: ProviderProtocol, path: pathlib.Path):
         self.provider = provider
@@ -190,33 +86,24 @@ class FileResourceManager(ResourceManagerProtocol[FileResource]):
         return isinstance(obj, pathlib.Path)
 
 
+class ResourceProtocol(typing.Protocol):
+    ...
+
+
 def file_endpoint(request: Request):
-    resources: typing.MutableMapping[str, FileResource] = get_resources(request)
+    resources: typing.Mapping[str, FileResource] = get_resources(request)
     resource = resources[request.path_params["guid"]]
 
-    path = resource.path
-    media_type = mimetypes.guess_type(path)[0] or "application/octet-stream"
-    content_range = request.headers.get("range")
+    media_type = mimetypes.guess_type(resource.path)[0] or "application/octet-stream"
 
-    if content_range is not None:
-        file = path.open("rb")
-        file_size = path.stat().st_size
-        range_start, range_end = parse_content_range(content_range, file_size)
-        content_length = (range_end - range_start) + 1
-        file = ranged(file, start=range_start, end=range_end + 1)
-
-        return StreamingResponse(
-            content=file,
+    if "range" in request.headers:
+        return StreamingFileResponse(
+            path=resource.path,
+            content_range=ContentRange.parse_header(request.headers["range"]),
             media_type=media_type,
-            status_code=206,
-            headers={
-                "Accept-Ranges": "bytes",
-                "Content-Length": str(content_length),
-                "range": f"bytes {range_start}-{range_end}/{file_size}",
-            },
         )
 
-    return FileResponse(path, media_type=media_type)
+    return FileResponse(path=resource.path, media_type=media_type)
 
 
 class ContentResource:
@@ -261,6 +148,7 @@ class ProviderContext:
     def url(self) -> str:
         return f"{self.provider.url}{self.scope}"
 
+
 class FileProviderMount(ProviderMount):
     def __init__(self, path: str = "/files"):
         super().__init__(
@@ -277,6 +165,7 @@ class ContentProviderMount(ProviderMount):
             routes=[Route("/{guid:path}", content_endpoint)],
             manager=ContentResourceManager(),
         )
+
 
 class Provider:
     """A server that provides resources to a client."""
@@ -325,4 +214,3 @@ class Provider:
             return f"{urlprefix}/proxy/{port}"
 
         return f"http://localhost:{port}"
-
