@@ -30,8 +30,10 @@ def test_unsupported_content_range(header: str):
     with pytest.raises(ValueError):
         ContentRange.parse_header(header)
 
+
 def test_md5():
     assert md5(b"test") == md5("test")
+
 
 @pytest.mark.parametrize(
     "start, end, expected",

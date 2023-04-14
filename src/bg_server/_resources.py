@@ -38,7 +38,7 @@ class Resource(metaclass=abc.ABCMeta):
 
     @property
     def url(self) -> str:
-        return f"{self._provider.url}/{self.guid}"
+        return f"{self._provider.url}/resources/{self.guid}"
 
     @abc.abstractmethod
     def get(self, request: Request, **kwargs) -> typing.Awaitable[Response]:

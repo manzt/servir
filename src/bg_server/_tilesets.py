@@ -16,6 +16,7 @@ from bg_server._protocols import ProviderProtocol, TilesetProtocol
 
 MOUNT_PATH = "/tilesets/api/v1/"
 
+
 class TilesetResource:
     def __init__(
         self, tileset: TilesetProtocol, provider: ProviderProtocol, uid: None | str = None
@@ -113,9 +114,9 @@ def create_tileset_route(
     tileset_resources: typing.Mapping[str, TilesetResource],
     scope_id: str = "tilesets",
 ) -> Mount:
-
     def middleware(app: ASGIApp):
         """Middleware to inject tileset resources into request scope."""
+
         @functools.wraps(app)
         async def wrapped_app(scope, receive, send):
             scope[scope_id] = tileset_resources
@@ -123,14 +124,13 @@ def create_tileset_route(
 
         return wrapped_app
 
-
     def inject_tilesets(func: TilesetEndpoint) -> typing.Callable[[Request], Response]:
         """Inject tileset resources as secondrequest handler."""
+
         def wrapper(request: Request):
             return func(request, request.scope[scope_id])
 
         return wrapper
-
 
     return Mount(
         path=MOUNT_PATH,

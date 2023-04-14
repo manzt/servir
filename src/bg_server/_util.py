@@ -173,6 +173,7 @@ def create_file_response(
         )
     return FileResponse(path=path, media_type=media_type)
 
+
 def guess_media_type(path: str | pathlib.Path) -> str:
     """Guess the media type of a file.
 

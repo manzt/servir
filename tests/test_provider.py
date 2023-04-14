@@ -1,7 +1,6 @@
 import json
 import pathlib
 
-import pytest
 import requests
 
 from bg_server._provide import Provider
@@ -20,6 +19,7 @@ def test_files(tmp_path: pathlib.Path):
 
     response = requests.get(provider.url + "/foo.txt")
     assert response.status_code == 404
+
 
 def test_file_content_type_json(tmp_path: pathlib.Path):
     data = {"hello": "world"}

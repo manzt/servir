@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import functools
 import os
 import pathlib
 import typing
@@ -8,7 +7,7 @@ import weakref
 
 from starlette.applications import Starlette
 from starlette.middleware.cors import CORSMiddleware
-from starlette.responses import CORSMiddleware
+from starlette.routing import BaseRoute
 
 from bg_server._background_server import BackgroundServer
 from bg_server._resources import (
@@ -19,7 +18,19 @@ from bg_server._resources import (
 from bg_server._tilesets import TilesetProtocol, TilesetResource, create_tileset_route
 
 
-def _create_app(routes: list[Route]) -> Starlette:
+def _create_app(
+    routes: typing.Sequence[BaseRoute], allowed_origins: list[str] | None
+) -> Starlette:
+    app = Starlette(routes=routes)
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=allowed_origins or ["*"],
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
+    return app
+
 
 class Provider(BackgroundServer):
     """A server that provides resources to a client."""
@@ -36,19 +47,12 @@ class Provider(BackgroundServer):
             str, TilesetResource
         ] = weakref.WeakValueDictionary()
 
-        app = Starlette(
+        app = _create_app(
             routes=[
                 create_tileset_route(self._tilesets),
                 create_resource_route(self._resources),
-            ]
-        )
-
-        app.add_middleware(
-            CORSMiddleware,
-            allow_origins=allowed_origins or ["*"],
-            allow_credentials=True,
-            allow_methods=["*"],
-            allow_headers=["*"],
+            ],
+            allowed_origins=allowed_origins,
         )
 
         self.proxy = proxy
