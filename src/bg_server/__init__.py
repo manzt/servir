@@ -10,18 +10,4 @@ try:
 except PackageNotFoundError:
     __version__ = "uninstalled"
 
-from bg_server._provide import (
-    ContentProviderMount as ContentProviderMount,
-)
-from bg_server._provide import (
-    FileProviderMount as FileProviderMount,
-)
-from bg_server._provide import (
-    Provider as Provider,
-)
-from bg_server._provide import (
-    ProviderMount as ProviderMount,
-)
-from bg_server._provide import (
-    get_resources as get_resources,
-)
+from bg_server._provide import Provider as Provider

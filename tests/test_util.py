@@ -2,7 +2,7 @@ import pathlib
 
 import pytest
 
-from bg_server._util import ContentRange, hash_path, md5, read_file_blocks
+from bg_server._util import ContentRange, md5, read_file_blocks
 
 
 @pytest.mark.parametrize(
@@ -30,17 +30,8 @@ def test_unsupported_content_range(header: str):
     with pytest.raises(ValueError):
         ContentRange.parse_header(header)
 
-
-def test_hash_path(tmp_path: pathlib.Path):
-    test_file = tmp_path / "test.txt"
-    assert hash_path(test_file) == hash_path(test_file.absolute())
-    assert hash_path(test_file) != hash_path(tmp_path / "test2.txt")
-    assert hash_path(test_file).endswith(".txt")
-
-
 def test_md5():
     assert md5(b"test") == md5("test")
-
 
 @pytest.mark.parametrize(
     "start, end, expected",

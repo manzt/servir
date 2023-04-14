@@ -2,11 +2,12 @@ from __future__ import annotations
 
 import dataclasses
 import hashlib
+import mimetypes
 import pathlib
 import re
 import typing
 
-from starlette.responses import StreamingResponse
+from starlette.responses import FileResponse, StreamingResponse
 
 
 def md5(data: str | bytes) -> str:
@@ -27,22 +28,22 @@ def md5(data: str | bytes) -> str:
     return hashlib.md5(data).hexdigest()
 
 
-def hash_path(path: pathlib.Path) -> str:
-    """Hash a path to a string.
-
-    This is used to generate a unique identifier for a file resource.
+def create_resource_identifier(data: str | bytes, id: str) -> str:
+    """Create a unique identifier for a string or bytes.
 
     Parameters
     ----------
-    path : pathlib.Path
-        The path to hash.
+    data : str | bytes
+        The string or bytes to hash.
+    id : str
+        The identifier for the data.
 
     Returns
     -------
     str :
-        A unique identifier for the path.
+        A unique identifier for the string or bytes.
     """
-    return md5(path.resolve().as_posix()) + path.suffix
+    return f"{md5(data)[:7]}-{id}"
 
 
 def read_file_blocks(
@@ -156,3 +157,33 @@ def StreamingFileResponse(
         status_code=status_code,
         headers=headers,
     )
+
+
+def create_file_response(
+    path: pathlib.Path,
+    content_range_header: str | None = None,
+):
+    media_type = guess_media_type(path)
+    if content_range_header:
+        content_range = ContentRange.parse_header(content_range_header)
+        return StreamingFileResponse(
+            path=path,
+            content_range=content_range,
+            media_type=media_type,
+        )
+    return FileResponse(path=path, media_type=media_type)
+
+def guess_media_type(path: str | pathlib.Path) -> str:
+    """Guess the media type of a file.
+
+    Parameters
+    ----------
+    path : pathlib.Path
+        The path to the file.
+
+    Returns
+    -------
+    str
+        The media type.
+    """
+    return mimetypes.guess_type(path)[0] or "application/octet-stream"
