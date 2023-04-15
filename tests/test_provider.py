@@ -66,3 +66,22 @@ def test_content_explicit_extension():
     response = requests.get(content_resource.url)
     assert response.text == data
     assert "text/csv" in response.headers["Content-Type"]
+
+
+def test_directory_resource(tmp_path: pathlib.Path):
+    provider = Provider()
+
+    root = tmp_path / "data_dir"
+    root.mkdir()
+    (root / "hello.txt").write_text("hello, world")
+    (root / "nested_dir").mkdir()
+    (root / "nested_dir" / "foo.txt").write_text("foo")
+
+    server_resource = provider.create(root)
+    print(server_resource.url)
+
+    response = requests.get(server_resource.url + "/hello.txt")
+    assert response.text == "hello, world"
+
+    response = requests.get(server_resource.url + "/nested_dir/foo.txt")
+    assert response.text == "foo"

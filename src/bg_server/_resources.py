@@ -72,7 +72,7 @@ class DirectoryResource(Resource):
 
     def get(self, request: Request) -> Response:
         full_path: str = request.path_params["path"]
-        resolved = self._path / full_path.replace(self._guid, "").rstrip("/")
+        resolved = self._path / full_path.replace(self._guid, "").lstrip("/")
         response = create_file_response(resolved, request.headers.get("range"))
         response.headers.update(self.headers)
         return response
