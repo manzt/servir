@@ -7,7 +7,6 @@ import weakref
 
 from starlette.applications import Starlette
 from starlette.middleware.cors import CORSMiddleware
-from starlette.routing import BaseRoute
 
 from bg_server._background_server import BackgroundServer
 from bg_server._resources import (
@@ -18,41 +17,32 @@ from bg_server._resources import (
 from bg_server._tilesets import TilesetProtocol, TilesetResource, create_tileset_route
 
 
-def _create_app(
-    routes: typing.Sequence[BaseRoute], allowed_origins: list[str] | None
-) -> Starlette:
-    app = Starlette(routes=routes)
-    app.add_middleware(
-        CORSMiddleware,
-        allow_origins=allowed_origins or ["*"],
-        allow_credentials=True,
-        allow_methods=["*"],
-        allow_headers=["*"],
-    )
-    return app
-
-
 class Provider(BackgroundServer):
     """A server that provides resources to a client."""
+
+    _resources: typing.MutableMapping[str, Resource]
+    _tilesets: typing.MutableMapping[str, TilesetResource]
 
     def __init__(
         self,
         allowed_origins: list[str] | None = None,
         proxy: bool = False,
     ):
-        self._resources: typing.MutableMapping[
-            str, Resource
-        ] = weakref.WeakValueDictionary()
-        self._tilesets: typing.MutableMapping[
-            str, TilesetResource
-        ] = weakref.WeakValueDictionary()
+        self._resources = weakref.WeakValueDictionary()
+        self._tilesets = weakref.WeakValueDictionary()
 
-        app = _create_app(
+        app = Starlette(
             routes=[
                 create_tileset_route(self._tilesets),
                 create_resource_route(self._resources),
             ],
-            allowed_origins=allowed_origins,
+        )
+        app.add_middleware(
+            CORSMiddleware,
+            allow_origins=allowed_origins or ["*"],
+            allow_credentials=True,
+            allow_methods=["*"],
+            allow_headers=["*"],
         )
 
         self.proxy = proxy
