@@ -26,12 +26,7 @@ import requests
 from bg_server import Provider, FileProviderMount, ContentProviderMount
 
 # create a provider
-provider = Provider(
-    routes=[
-        FileProviderMount("/files"),
-        ContentProviderMount("/content"),
-    ],
-)
+provider = Provider()
 
 
 ### File (supports range requests)
