@@ -23,15 +23,10 @@ pip install bg-server
 import pathlib
 
 import requests
-from bg_server import Provider, FileProviderMount, ContentProviderMount
+from bg_server import Provider
 
 # create a provider
-provider = Provider(
-    routes=[
-        FileProviderMount("/files"),
-        ContentProviderMount("/content"),
-    ],
-)
+provider = Provider()
 
 
 ### File (supports range requests)
@@ -39,13 +34,21 @@ provider = Provider(
 path = pathlib.Path("hello.txt")
 path.write_text("hello, world")
 
-# create a resource on the server for your file
-# starts a background thread the first time a resource is initialized
 file_resource = provider.create(path)
-
 response = requests.get(file_resource.url)
 assert response.text == "hello, world"
-assert "text/plain" in response.headers["Content-Type"] # inferred from file extension
+assert "text/plain" in response.headers["Content-Type"] 
+
+### Directory (supports range requests)
+
+root = pathlib.Path("data_dir")
+root.mkdir()
+(root / "hello.txt").write_text("hello, world")
+
+dir_resource = provider.create(root)
+response = requests.get(file_resource.url + "/hello.txt")
+assert response.text == "hello, world"
+assert "text/plain" in response.headers["Content-Type"]
 
 
 ### In-memory
