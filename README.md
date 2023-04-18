@@ -1,5 +1,7 @@
 # bg-server
 
+an extensible async background server for python
+
 [![PyPI - Version](https://img.shields.io/pypi/v/bg-server.svg)](https://pypi.org/project/bg-server)
 [![PyPI - Python Version](https://img.shields.io/pypi/pyversions/bg-server.svg)](https://pypi.org/project/bg-server)
 
