@@ -3,8 +3,16 @@ from __future__ import annotations
 import pathlib
 
 import pytest
+from starlette.responses import FileResponse, StreamingResponse
 
-from bg_server._util import ContentRange, md5, read_file_blocks
+from bg_server._util import (
+    ContentRange,
+    create_file_response,
+    create_resource_identifier,
+    guess_media_type,
+    md5,
+    read_file_blocks,
+)
 
 
 @pytest.mark.parametrize(
@@ -49,3 +57,37 @@ def test_read_file_blocks(tmp_path: pathlib.Path, start: int, end: int, expected
     test_file = tmp_path / "test.txt"
     test_file.write_text("test")
     assert b"".join(read_file_blocks(test_file, start, end)) == expected
+
+
+@pytest.mark.parametrize(
+    "path, expected",
+    [
+        ("none", "application/octet-stream"),
+        ("data.txt", "text/plain"),
+        ("data.json", "application/json"),
+    ],
+)
+def test_guess_media_type(path: str, expected: str):
+    assert guess_media_type(path) == expected
+
+
+@pytest.mark.parametrize(
+    "range_header, expected",
+    [
+        ("bytes=0-499", StreamingResponse),
+        (None, FileResponse),
+    ],
+)
+def test_create_file_response(
+    range_header: str, expected: type[FileResponse], tmp_path: pathlib.Path
+):
+    path = tmp_path / "data.txt"
+    path.write_text("test")
+    file_response = create_file_response(path, range_header)
+    assert isinstance(file_response, expected)
+
+
+def test_create_resource_identifier():
+    identifer = create_resource_identifier("hello, world", "data.txt")
+    assert identifer.endswith("-data.txt")
+

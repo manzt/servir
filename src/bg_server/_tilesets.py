@@ -14,7 +14,7 @@ from bg_server._protocols import ProviderProtocol, TilesetProtocol
 # HiGlass
 
 
-MOUNT_PATH = "/tilesets/api/v1/"
+_MOUNT_PATH = "/tilesets/api/v1/"
 
 
 class TilesetResource:
@@ -35,16 +35,11 @@ class TilesetResource:
 
     @property
     def server(self) -> str:
-        return f"{self._provider.url}{MOUNT_PATH}"
+        return f"{self._provider.url}{_MOUNT_PATH}"
 
 
 def get_list(query: str, field: str) -> list[str]:
     """Parse chained query params into list.
-
-    >>> get_list("d=id1&d=id2&d=id3", "d")
-    ['id1', 'id2', 'id3']
-    >>> get_list("d=1&e=2&d=3", "d")
-    ['1', '3'].
 
     Parameters
     ----------
@@ -133,7 +128,7 @@ def create_tileset_route(
         return wrapper
 
     return Mount(
-        path=MOUNT_PATH,
+        path=_MOUNT_PATH,
         routes=[
             Route("/tileset_info/", inject_tilesets(tileset_info)),
             Route("/tiles/", inject_tilesets(tiles)),

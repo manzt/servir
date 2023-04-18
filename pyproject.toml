@@ -116,11 +116,15 @@ parallel = true
 bg_server = ["src/bg_server", "*/bg-server/src/bg_server"]
 tests = ["tests", "*/bg-server/tests"]
 
+# https://coverage.readthedocs.io/en/6.4/config.html
 [tool.coverage.report]
 exclude_lines = [
-  "no cov",
-  "if __name__ == .__main__.:",
-  "if TYPE_CHECKING:",
+    "pragma: no cover",
+    "if TYPE_CHECKING:",
+    "@overload",
+    "except ImportError",
+    "\\.\\.\\.",
+    "raise NotImplementedError()"
 ]
 
 [tool.pdm]
