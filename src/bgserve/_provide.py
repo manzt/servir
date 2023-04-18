@@ -8,13 +8,13 @@ import weakref
 from starlette.applications import Starlette
 from starlette.middleware.cors import CORSMiddleware
 
-from bg_server._background_server import BackgroundServer
-from bg_server._resources import (
+from bgserve._background_server import BackgroundServer
+from bgserve._resources import (
     Resource,
     create_resource,
     create_resource_route,
 )
-from bg_server._tilesets import TilesetProtocol, TilesetResource, create_tileset_route
+from bgserve._tilesets import TilesetProtocol, TilesetResource, create_tileset_route
 
 
 class Provider(BackgroundServer):

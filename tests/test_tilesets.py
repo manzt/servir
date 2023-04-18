@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import pytest
 
-from bg_server._tilesets import get_list
+from bgserve._tilesets import get_list
 
 
 @pytest.mark.parametrize(

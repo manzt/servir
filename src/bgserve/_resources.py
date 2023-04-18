@@ -9,7 +9,7 @@ from starlette.requests import Request
 from starlette.responses import Response
 from starlette.routing import Mount, Route
 
-from bg_server._util import (
+from bgserve._util import (
     create_file_response,
     create_resource_identifier,
     guess_media_type,

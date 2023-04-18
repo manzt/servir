@@ -1,9 +1,9 @@
-# bg-server
+# bgserve
 
 an extensible async background server for python
 
-[![PyPI - Version](https://img.shields.io/pypi/v/bg-server.svg)](https://pypi.org/project/bg-server)
-[![PyPI - Python Version](https://img.shields.io/pypi/pyversions/bg-server.svg)](https://pypi.org/project/bg-server)
+[![PyPI - Version](https://img.shields.io/pypi/v/bgserve.svg)](https://pypi.org/project/bgserve)
+[![PyPI - Python Version](https://img.shields.io/pypi/pyversions/bgserve.svg)](https://pypi.org/project/bgserve)
 
 -----
 
@@ -16,7 +16,7 @@ an extensible async background server for python
 ## installation
 
 ```console
-pip install bg-server
+pip install bgserve
 ```
 
 ## usage
@@ -25,7 +25,7 @@ pip install bg-server
 import pathlib
 
 import requests
-from bg_server import Provider
+from bgserve import Provider
 
 # create a provider
 provider = Provider()
@@ -65,4 +65,4 @@ assert "text/csv" in response.headers["Content-Type"]
 
 ## license
 
-`bg-server` is distributed under the terms of the [MIT](https://spdx.org/licenses/MIT.html) license.
+`bgserve` is distributed under the terms of the [MIT](https://spdx.org/licenses/MIT.html) license.

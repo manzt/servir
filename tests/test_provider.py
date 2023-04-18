@@ -7,7 +7,7 @@ import typing
 import pytest
 import requests
 
-from bg_server._provide import Provider
+from bgserve._provide import Provider
 
 
 @pytest.fixture(scope="module")

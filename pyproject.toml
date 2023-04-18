@@ -3,7 +3,7 @@ requires = ["hatchling", "hatch-vcs"]
 build-backend = "hatchling.build"
 
 [project]
-name = "bg-server"
+name = "bgserve"
 dynamic = ["version"]
 description = "an extensible async background server"
 readme = "README.md"
@@ -31,9 +31,9 @@ dependencies = [
 ]
 
 [project.urls]
-Documentation = "https://github.com/unknown/bg-server#readme"
-Issues = "https://github.com/unknown/bg-server/issues"
-Source = "https://github.com/unknown/bg-server"
+Documentation = "https://github.com/unknown/bgserve#readme"
+Issues = "https://github.com/unknown/bgserve/issues"
+Source = "https://github.com/unknown/bgserve"
 
 [tool.hatch.version]
 source = "vcs"
@@ -67,7 +67,7 @@ dependencies = [
   "ruff>=0.0.243",
 ]
 [tool.hatch.envs.lint.scripts]
-typing = "mypy --install-types --non-interactive {args:src/bg_server tests}"
+typing = "mypy --install-types --non-interactive {args:src/bgserve tests}"
 style = [
   "ruff {args:.}",
   "black --check --diff {args:.}",
@@ -102,19 +102,19 @@ extend-select = [
 convention = "numpy"
 
 [tool.ruff.isort]
-known-first-party = ["bg_server"]
+known-first-party = ["bgserve"]
 
 [tool.ruff.per-file-ignores]
 "tests/*.py" = ["D", "S101"]
 
 [tool.coverage.run]
-source_pkgs = ["bg_server", "tests"]
+source_pkgs = ["bgserve", "tests"]
 branch = true
 parallel = true
 
 [tool.coverage.paths]
-bg_server = ["src/bg_server", "*/bg-server/src/bg_server"]
-tests = ["tests", "*/bg-server/tests"]
+bgserve = ["src/bgserve", "*/bgserve/src/bgserve"]
+tests = ["tests", "*/bgserve/tests"]
 
 # https://coverage.readthedocs.io/en/6.4/config.html
 [tool.coverage.report]
