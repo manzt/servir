@@ -38,15 +38,13 @@ def test_file_content_type_json(tmp_path: pathlib.Path):
 
 
 def test_file_content_type_csv(tmp_path: pathlib.Path):
-    data = "a,b,c\n1,2,3\n4,5,6"
-
-    with open(tmp_path / "data.csv", "w") as f:
-        f.write(data)
+    path = tmp_path / "data.csv"
+    path.write_text("a,b,c\n1,2,3\n4,5,6")
 
     provider = Provider()
-    server_resource = provider.create(tmp_path / "data.csv")
+    server_resource = provider.create(path)
     response = requests.get(server_resource.url)
-    assert response.text == data
+    assert response.text == path.read_text()
     assert "text/csv" in response.headers["Content-Type"]
 
 
