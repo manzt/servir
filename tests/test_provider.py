@@ -7,8 +7,8 @@ import typing
 import pytest
 import requests
 
-from bgserve._provide import Provider
-from bgserve._tilesets import TilesetResource
+from servir._provide import Provider
+from servir._tilesets import TilesetResource
 
 
 @pytest.fixture(scope="module")

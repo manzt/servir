@@ -3,7 +3,7 @@ requires = ["hatchling", "hatch-vcs"]
 build-backend = "hatchling.build"
 
 [project]
-name = "bgserve"
+name = "servir"
 dynamic = ["version"]
 description = "an extensible async background server"
 readme = "README.md"
@@ -30,9 +30,9 @@ dependencies = [
 ]
 
 [project.urls]
-Documentation = "https://github.com/unknown/bgserve#readme"
-Issues = "https://github.com/unknown/bgserve/issues"
-Source = "https://github.com/unknown/bgserve"
+Documentation = "https://github.com/unknown/servir#readme"
+Issues = "https://github.com/unknown/servir/issues"
+Source = "https://github.com/unknown/servir"
 
 [tool.hatch.version]
 source = "vcs"
@@ -45,7 +45,7 @@ dependencies = [
   "requests",
 ]
 [tool.hatch.envs.default.scripts]
-typing = "mypy --strict --install-types --non-interactive {args:src/bgserve tests}"
+typing = "mypy --strict --install-types --non-interactive {args:src/servir tests}"
 test = "pytest {args:tests}"
 test-cov = "coverage run -m pytest {args:tests}"
 cov-report = [
@@ -100,20 +100,20 @@ extend-select = [
 convention = "numpy"
 
 [tool.ruff.isort]
-known-first-party = ["bgserve"]
+known-first-party = ["servir"]
 
 [tool.ruff.per-file-ignores]
-"src/bgserve/__init__.py" = ["E402"]
+"src/servir/__init__.py" = ["E402"]
 "tests/*.py" = ["D", "S101"]
 
 [tool.coverage.run]
-source_pkgs = ["bgserve", "tests"]
+source_pkgs = ["servir", "tests"]
 branch = true
 parallel = true
 
 [tool.coverage.paths]
-bgserve = ["src/bgserve", "*/bgserve/src/bgserve"]
-tests = ["tests", "*/bgserve/tests"]
+servir = ["src/servir", "*/servir/src/servir"]
+tests = ["tests", "*/servir/tests"]
 
 # https://coverage.readthedocs.io/en/6.4/config.html
 [tool.coverage.report]

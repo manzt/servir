@@ -9,8 +9,8 @@ from starlette.requests import Request
 from starlette.responses import Response
 from starlette.routing import Mount, Route
 
-from bgserve._protocols import ProviderProtocol
-from bgserve._util import (
+from servir._protocols import ProviderProtocol
+from servir._util import (
     create_file_response,
     create_resource_identifier,
     guess_media_type,

@@ -9,7 +9,7 @@ from starlette.responses import JSONResponse, PlainTextResponse, Response
 from starlette.routing import Mount, Route
 from starlette.types import ASGIApp, Receive, Scope, Send
 
-from bgserve._protocols import ProviderProtocol, TilesetProtocol
+from servir._protocols import ProviderProtocol, TilesetProtocol
 
 # HiGlass
 

@@ -5,7 +5,7 @@ import pathlib
 import pytest
 from starlette.responses import FileResponse, StreamingResponse
 
-from bgserve._util import (
+from servir._util import (
     ContentRange,
     create_file_response,
     create_resource_identifier,
