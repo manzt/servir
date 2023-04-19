@@ -23,11 +23,14 @@ class Provider(BackgroundServer):
     _resources: typing.MutableMapping[str, Resource]
     _tilesets: typing.MutableMapping[str, TilesetResource]
 
-    def __init__(
-        self,
-        allowed_origins: list[str] | None = None,
-        proxy: bool = False,
-    ):
+    def __init__(self, proxy: bool = False):
+        """Create a new Provider.
+
+        Parameters
+        ----------
+        proxy : bool, optional
+            Whether the url should be proxied for `jupyter-server-proxy` (default: False).
+        """
         self._resources = weakref.WeakValueDictionary()
         self._tilesets = weakref.WeakValueDictionary()
 
@@ -37,9 +40,10 @@ class Provider(BackgroundServer):
                 create_resource_route(self._resources),
             ],
         )
+        # TODO: make this configurable?
         app.add_middleware(
             CORSMiddleware,
-            allow_origins=allowed_origins or ["*"],
+            allow_origins=["*"],
             allow_credentials=True,
             allow_methods=["*"],
             allow_headers=["*"],
@@ -50,6 +54,18 @@ class Provider(BackgroundServer):
 
     @property
     def url(self) -> str:
+        """The URL for this provider.
+
+        If proxy is True, the URL will be proxied for `jupyter-server-proxy`.
+
+        If the environment variable `JUPYTERHUB_SERVICE_PREFIX` is set, the URL will be
+        prefixed for JupyterHub.
+
+        Returns
+        -------
+        str
+            The URL for this provider.
+        """
         if self.proxy:
             return f"/proxy/{self.port}"
 
@@ -62,10 +78,12 @@ class Provider(BackgroundServer):
 
     @typing.overload
     def create(self, path: pathlib.Path | str, /, **kwargs) -> Resource:
+        """Create a new resource."""
         ...
 
     @typing.overload
     def create(self, tileset: TilesetProtocol, /, **kwargs) -> TilesetResource:
+        """Create a new tileset resource."""
         ...
 
     def create(
