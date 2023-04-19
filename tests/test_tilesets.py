@@ -12,5 +12,5 @@ from bgserve._tilesets import get_list
         ("d=1&e=2&d=3", "d", ["1", "3"]),
     ],
 )
-def test_get_list(query: str, key: str, expected: list[str]):
+def test_get_list(query: str, key: str, expected: list[str]) -> None:
     assert get_list(query, key) == expected

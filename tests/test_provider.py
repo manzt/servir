@@ -17,7 +17,7 @@ def provider() -> typing.Iterator[Provider]:
     provider.stop()
 
 
-def test_files(provider: Provider, tmp_path: pathlib.Path):
+def test_files(provider: Provider, tmp_path: pathlib.Path) -> None:
     with open(tmp_path / "hello.txt", "w") as f:
         f.write("hello, world")
 
@@ -30,7 +30,7 @@ def test_files(provider: Provider, tmp_path: pathlib.Path):
     assert response.status_code == 404
 
 
-def test_file_content_type_json(provider: Provider, tmp_path: pathlib.Path):
+def test_file_content_type_json(provider: Provider, tmp_path: pathlib.Path) -> None:
     data = {"hello": "world"}
 
     with open(tmp_path / "hello.json", "w") as f:
@@ -42,7 +42,7 @@ def test_file_content_type_json(provider: Provider, tmp_path: pathlib.Path):
     assert "application/json" in response.headers["Content-Type"]
 
 
-def test_file_content_type_csv(provider: Provider, tmp_path: pathlib.Path):
+def test_file_content_type_csv(provider: Provider, tmp_path: pathlib.Path) -> None:
     path = tmp_path / "data.csv"
 
     with open(path, mode="w", newline="\n") as f:
@@ -54,7 +54,7 @@ def test_file_content_type_csv(provider: Provider, tmp_path: pathlib.Path):
     assert "text/csv" in response.headers["Content-Type"]
 
 
-def test_content(provider: Provider):
+def test_content(provider: Provider) -> None:
     content = "hello, world"
     str_resource = provider.create(content)
     response = requests.get(str_resource.url)
@@ -62,7 +62,7 @@ def test_content(provider: Provider):
     assert "text/plain" in response.headers["Content-Type"]
 
 
-def test_content_explicit_extension(provider: Provider):
+def test_content_explicit_extension(provider: Provider) -> None:
     data = "a,b,c,\n1,2,3,\n4,5,6"
 
     content_resource = provider.create(data, extension=".csv")
@@ -71,7 +71,7 @@ def test_content_explicit_extension(provider: Provider):
     assert "text/csv" in response.headers["Content-Type"]
 
 
-def test_directory_resource(provider: Provider, tmp_path: pathlib.Path):
+def test_directory_resource(provider: Provider, tmp_path: pathlib.Path) -> None:
     root = tmp_path / "data_dir"
     root.mkdir()
     (root / "hello.txt").write_text("hello, world")

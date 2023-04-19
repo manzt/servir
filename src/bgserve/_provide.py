@@ -9,12 +9,13 @@ from starlette.applications import Starlette
 from starlette.middleware.cors import CORSMiddleware
 
 from bgserve._background_server import BackgroundServer
+from bgserve._protocols import TilesetProtocol
 from bgserve._resources import (
     Resource,
     create_resource,
     create_resource_route,
 )
-from bgserve._tilesets import TilesetProtocol, TilesetResource, create_tileset_route
+from bgserve._tilesets import TilesetResource, create_tileset_route
 
 
 class Provider(BackgroundServer):
@@ -77,25 +78,40 @@ class Provider(BackgroundServer):
         return f"http://localhost:{self.port}"
 
     @typing.overload
-    def create(self, path: pathlib.Path | str, /, **kwargs) -> Resource:
-        """Create a new resource."""
+    def create(self, path: pathlib.Path | str, /, **kwargs: typing.Any) -> Resource:
         ...
 
     @typing.overload
-    def create(self, tileset: TilesetProtocol, /, **kwargs) -> TilesetResource:
-        """Create a new tileset resource."""
+    def create(
+        self, tileset: TilesetProtocol, /, **kwargs: typing.Any
+    ) -> TilesetResource:
         ...
 
     def create(
-        self, x: pathlib.Path | str | TilesetProtocol, /, **kwargs
+        self, x: pathlib.Path | str | TilesetProtocol, /, **kwargs: typing.Any
     ) -> Resource | TilesetResource:
-        self.start()
+        """Create a resource from a path or tileset.
+
+        Parameters
+        ----------
+        x : pathlib.Path | str | TilesetProtocol
+            The path or tileset to create a resource from.
+        **kwargs
+            Additional keyword arguments to pass to the resource constructor.
+
+        Returns
+        -------
+        Resource | TilesetResource
+            The resource.
+        """
+        resource: Resource | TilesetResource
 
         if not isinstance(x, (pathlib.Path, str)):
             resource = TilesetResource(x, provider=self, **kwargs)
             self._tilesets[resource.uid] = resource
-            return resource
+        else:
+            resource = create_resource(x, provider=self, **kwargs)
+            self._resources[resource.guid] = resource
 
-        resource = create_resource(x, provider=self, **kwargs)
-        self._resources[resource.guid] = resource
+        self.start()
         return resource

@@ -58,7 +58,7 @@ class Resource(metaclass=abc.ABCMeta):
         return f"{self._provider.url}/resources/{self.guid}"
 
     @abc.abstractmethod
-    def get(self, request: Request, **kwargs) -> typing.Awaitable[Response]:
+    def get(self, request: Request) -> Response:
         """Get the resource.
 
         Parameters
@@ -75,7 +75,7 @@ class Resource(metaclass=abc.ABCMeta):
 
 
 class FileResource(Resource):
-    def __init__(self, path: pathlib.Path, **kwargs):
+    def __init__(self, path: pathlib.Path, **kwargs: typing.Any):
         super().__init__(**kwargs)
         assert path.is_file(), "Path must be a file"
         self._path = path
@@ -92,7 +92,7 @@ class FileResource(Resource):
 class DirectoryResource(Resource):
     """Serve a directory as a resource."""
 
-    def __init__(self, path: pathlib.Path, **kwargs):
+    def __init__(self, path: pathlib.Path, **kwargs: typing.Any):
         """Create a new DirectoryResource.
 
         Parameters
@@ -130,7 +130,9 @@ class DirectoryResource(Resource):
 class ContentResource(Resource):
     """Serve a string or bytes as a resource."""
 
-    def __init__(self, content: str | bytes, extension: None | str = None, **kwargs):
+    def __init__(
+        self, content: str | bytes, extension: None | str = None, **kwargs: typing.Any
+    ):
         """Create a new ContentResource.
 
         Parameters
@@ -170,7 +172,7 @@ def create_resource_route(resources: typing.Mapping[str, Resource]) -> Mount:
         A route for serving resources.
     """
 
-    def endpoint(request: Request) -> typing.Awaitable[Response]:
+    def endpoint(request: Request) -> Response:
         path = request.path_params["path"]
         guid = path.split("/")[0]
         return resources[guid].get(request)
@@ -184,7 +186,7 @@ def create_resource_route(resources: typing.Mapping[str, Resource]) -> Mount:
 
 
 def create_resource(
-    x: pathlib.Path | str, provider: ProviderProtocol, **kwargs
+    x: pathlib.Path | str, provider: ProviderProtocol, **kwargs: typing.Any
 ) -> Resource:
     """Create a resource from a path or string.
 

@@ -126,12 +126,12 @@ class ContentRange:
         )
 
 
-def StreamingFileResponse(
+def create_streaming_file_response(
     path: pathlib.Path,
     content_range: ContentRange | None = None,
     media_type: str | None = None,
     headers: None | typing.Mapping[str, str] = None,
-):
+) -> StreamingResponse:
     file_size = path.stat().st_size
 
     if not content_range:
@@ -162,11 +162,11 @@ def StreamingFileResponse(
 def create_file_response(
     path: pathlib.Path,
     content_range_header: str | None = None,
-):
+) -> FileResponse | StreamingResponse:
     media_type = guess_media_type(path)
     if content_range_header:
         content_range = ContentRange.parse_header(content_range_header)
-        return StreamingFileResponse(
+        return create_streaming_file_response(
             path=path,
             content_range=content_range,
             media_type=media_type,

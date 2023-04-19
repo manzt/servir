@@ -24,7 +24,7 @@ from bgserve._util import (
         ("bytes=1-,", ContentRange(1, None)),
     ],
 )
-def test_content_range(header: str, expected: tuple[int, int]):
+def test_content_range(header: str, expected: ContentRange) -> None:
     content_range = ContentRange.parse_header(header)
     assert content_range == expected
 
@@ -36,12 +36,12 @@ def test_content_range(header: str, expected: tuple[int, int]):
         ("bytes=0-100, -399"),
     ],
 )
-def test_unsupported_content_range(header: str):
+def test_unsupported_content_range(header: str) -> None:
     with pytest.raises(ValueError):
         ContentRange.parse_header(header)
 
 
-def test_md5():
+def test_md5() -> None:
     assert md5(b"test") == md5("test")
 
 
@@ -53,7 +53,9 @@ def test_md5():
         (4, 4, b""),
     ],
 )
-def test_read_file_blocks(tmp_path: pathlib.Path, start: int, end: int, expected: bytes):
+def test_read_file_blocks(
+    tmp_path: pathlib.Path, start: int, end: int, expected: bytes
+) -> None:
     test_file = tmp_path / "test.txt"
     test_file.write_text("test")
     assert b"".join(read_file_blocks(test_file, start, end)) == expected
@@ -67,7 +69,7 @@ def test_read_file_blocks(tmp_path: pathlib.Path, start: int, end: int, expected
         ("data.json", "application/json"),
     ],
 )
-def test_guess_media_type(path: str, expected: str):
+def test_guess_media_type(path: str, expected: str) -> None:
     assert guess_media_type(path) == expected
 
 
@@ -80,13 +82,13 @@ def test_guess_media_type(path: str, expected: str):
 )
 def test_create_file_response(
     range_header: str, expected: type[FileResponse], tmp_path: pathlib.Path
-):
+) -> None:
     path = tmp_path / "data.txt"
     path.write_text("test")
     file_response = create_file_response(path, range_header)
     assert isinstance(file_response, expected)
 
 
-def test_create_resource_identifier():
+def test_create_resource_identifier() -> None:
     identifer = create_resource_identifier("hello, world", "data.txt")
     assert identifer.endswith("-data.txt")

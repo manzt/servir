@@ -7,7 +7,7 @@ import typing
 from starlette.requests import Request
 from starlette.responses import JSONResponse, PlainTextResponse, Response
 from starlette.routing import Mount, Route
-from starlette.types import ASGIApp
+from starlette.types import ASGIApp, Receive, Scope, Send
 
 from bgserve._protocols import ProviderProtocol, TilesetProtocol
 
@@ -18,23 +18,40 @@ _MOUNT_PATH = "/tilesets/api/v1/"
 
 
 class TilesetResource:
+    """A tileset resource."""
+
     def __init__(
         self, tileset: TilesetProtocol, provider: ProviderProtocol, uid: None | str = None
     ):
+        """Initialize a tileset resource.
+
+        Parameters
+        ----------
+        tileset : TilesetProtocol
+            The tileset.
+        provider : ProviderProtocol
+            The server provider.
+        uid : None | str, optional
+            The unique identifier for the tileset, by default None. If None, the
+            object id of the tileset instance will be used.
+        """
         self._tileset = tileset
         self._provider = provider
         self._uid = uid or str(id(tileset))
 
     @property
     def tileset(self) -> TilesetProtocol:
+        """The tileset."""
         return self._tileset
 
     @property
     def uid(self) -> str:
+        """The unique identifier for the tileset."""
         return self._uid
 
     @property
     def server(self) -> str:
+        """The server url."""
         return f"{self._provider.url}{_MOUNT_PATH}"
 
 
@@ -57,7 +74,23 @@ def get_list(query: str, field: str) -> list[str]:
     return [v for k, v in kv_tuples if k == field]
 
 
-def tileset_info(request: Request, tilesets: typing.Mapping[str, TilesetResource]):
+def tileset_info(
+    request: Request, tilesets: typing.Mapping[str, TilesetResource]
+) -> JSONResponse:
+    """Request handler for the tileset_info/ endpoint.
+
+    Parameters
+    ----------
+    request : Request
+        The request.
+    tilesets : typing.Mapping[str, TilesetResource]
+        The tileset resources.
+
+    Returns
+    -------
+    JSONResponse
+        The server response.
+    """
     uids = get_list(request.url.query, "d")
     info = {
         uid: tilesets[uid].tileset.info()
@@ -68,12 +101,28 @@ def tileset_info(request: Request, tilesets: typing.Mapping[str, TilesetResource
     return JSONResponse(info)
 
 
-def tiles(request: Request, tilesets: typing.Mapping[str, TilesetResource]):
+def tiles(
+    request: Request, tilesets: typing.Mapping[str, TilesetResource]
+) -> JSONResponse:
+    """Request handler for the tiles/ endpoint.
+
+    Parameters
+    ----------
+    request : Request
+        The request.
+    tilesets : typing.Mapping[str, TilesetResource]
+        The tileset resources.
+
+    Returns
+    -------
+    JSONResponse
+        The server response.
+    """
     requested_tids = set(get_list(request.url.query, "d"))
     if not requested_tids:
         return JSONResponse({"error": "No tiles requested"}, 400)
 
-    tiles: list = []
+    tiles: list[typing.Any] = []
     for uid, tids in itertools.groupby(
         iterable=sorted(requested_tids), key=lambda tid: tid.split(".")[0]
     ):
@@ -87,8 +136,30 @@ def tiles(request: Request, tilesets: typing.Mapping[str, TilesetResource]):
     return JSONResponse(data)
 
 
-def chromsizes(request: Request, tilesets: typing.Mapping[str, TilesetResource]):
-    """Return chromsizes for given tileset id as TSV."""
+def chromsizes(
+    request: Request, tilesets: typing.Mapping[str, TilesetResource]
+) -> PlainTextResponse | JSONResponse:
+    """Request handler for the chrom-sizes/ endpoint.
+
+    Chromsizes are returned as a plain text response, as a TSV:
+
+        chr1    249250621
+        chr2    243199373
+        ...
+
+    Parameters
+    ----------
+    request : Request
+        The request.
+    tilesets : typing.Mapping[str, TilesetResource]
+        The tileset resources.
+
+    Returns
+    -------
+    PlainTextResponse | JSONResponse
+        The server response. If the tileset does not have chromsizes, a JSON
+        response with an error message is returned.
+    """
     uid = request.query_params.get("id")
     if uid is None:
         return JSONResponse({"error": "No uid provided."}, 400)
@@ -109,11 +180,26 @@ def create_tileset_route(
     tileset_resources: typing.Mapping[str, TilesetResource],
     scope_id: str = "tilesets",
 ) -> Mount:
-    def middleware(app: ASGIApp):
+    """Create a route for tileset endpoints.
+
+    Parameters
+    ----------
+    tileset_resources : typing.Mapping[str, TilesetResource]
+        The tileset resources.
+    scope_id : str, optional
+        The scope id to use for passing the tileset resources to the
+        request handlers, by default "tilesets".
+
+    Returns
+    -------
+    Mount
+        The API route.
+    """
+    def middleware(app: ASGIApp) -> ASGIApp:
         """Middleware to inject tileset resources into request scope."""
 
         @functools.wraps(app)
-        async def wrapped_app(scope, receive, send):
+        async def wrapped_app(scope: Scope, receive: Receive, send: Send) -> None:
             scope[scope_id] = tileset_resources
             await app(scope, receive, send)
 
@@ -122,7 +208,7 @@ def create_tileset_route(
     def inject_tilesets(func: TilesetEndpoint) -> typing.Callable[[Request], Response]:
         """Inject tileset resources as secondrequest handler."""
 
-        def wrapper(request: Request):
+        def wrapper(request: Request) -> Response:
             return func(request, request.scope[scope_id])
 
         return wrapper

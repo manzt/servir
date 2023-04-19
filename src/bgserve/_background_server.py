@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import threading
 import time
+import typing
 
 import portpicker
 import uvicorn
@@ -16,7 +17,14 @@ class BackgroundServer:
     _server_thread: threading.Thread | None
     _server: uvicorn.Server | None
 
-    def __init__(self, app: ASGIApp):
+    def __init__(self, app: ASGIApp) -> None:
+        """Initialize a background server for the given Starlette app.
+
+        Parameters
+        ----------
+        app : ASGIApp
+            The Starlette app to run in the background.
+        """
         self._app = app
         self._port = None
         self._server_thread = None
@@ -24,15 +32,18 @@ class BackgroundServer:
 
     @property
     def app(self) -> ASGIApp:
+        """The Starlette app being run in the background."""
         return self._app
 
     @property
     def port(self) -> int:
+        """The port on which the server is running."""
         if self._server_thread is None or self._port is None:
             raise RuntimeError("Server not running.")
         return self._port
 
-    def stop(self):
+    def stop(self) -> BackgroundServer:
+        """Stop the background server thread."""
         if self._server_thread is None:
             return self
         assert self._server is not None
@@ -53,7 +64,26 @@ class BackgroundServer:
         timeout: int = 1,
         daemon: bool = True,
         log_level: str = "warning",
-    ):
+    ) -> BackgroundServer:
+        """Start app in a background thread.
+
+        Parameters
+        ----------
+        port : int, optional
+            The port on which to run the server. If not provided, a random port will be
+            selected.
+        timeout : int, optional
+            The timeout for keep-alive connections, by default 1.
+        daemon : bool, optional
+            Whether to run the server thread as a daemon thread, by default True.
+        log_level : str, optional
+            The log level for the server, by default "warning".
+
+        Returns
+        -------
+        BackgroundServer
+            The background server instance.
+        """
         if self._server_thread is not None:
             return self
 
