@@ -90,4 +90,3 @@ def test_create_file_response(
 def test_create_resource_identifier():
     identifer = create_resource_identifier("hello, world", "data.txt")
     assert identifer.endswith("-data.txt")
-

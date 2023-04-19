@@ -16,6 +16,7 @@ def provider() -> typing.Iterator[Provider]:
     yield provider
     provider.stop()
 
+
 def test_files(provider: Provider, tmp_path: pathlib.Path):
     with open(tmp_path / "hello.txt", "w") as f:
         f.write("hello, world")

@@ -14,4 +14,3 @@ from bgserve._tilesets import get_list
 )
 def test_get_list(query: str, key: str, expected: list[str]):
     assert get_list(query, key) == expected
-
