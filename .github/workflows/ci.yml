@@ -28,7 +28,7 @@ jobs:
           hatch run typing
 
   Test:
-    name: Test / py${{ matrix.python-version }} / ${{ matrix.os }}
+    name: Python ${{ matrix.python-version }} / ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false

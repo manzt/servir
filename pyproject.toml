@@ -103,6 +103,7 @@ convention = "numpy"
 known-first-party = ["bgserve"]
 
 [tool.ruff.per-file-ignores]
+"src/bgserve/__init__.py" = ["E402"]
 "tests/*.py" = ["D", "S101"]
 
 [tool.coverage.run]

@@ -7,4 +7,8 @@ try:
 except PackageNotFoundError:
     __version__ = "uninstalled"
 
-from bgserve._provide import Provider as Provider
+from bgserve._provide import Provider
+from bgserve._resources import Resource
+from bgserve._tilesets import TilesetResource
+
+__all__ = ["Provider", "Resource", "TilesetResource", "__version__"]
