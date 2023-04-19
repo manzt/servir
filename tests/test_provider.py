@@ -8,6 +8,7 @@ import pytest
 import requests
 
 from bgserve._provide import Provider
+from bgserve._tilesets import TilesetResource
 
 
 @pytest.fixture(scope="module")
@@ -86,3 +87,23 @@ def test_directory_resource(provider: Provider, tmp_path: pathlib.Path) -> None:
 
     response = requests.get(server_resource.url + "/nested_dir/foo.txt")
     assert response.text == "foo"
+
+
+def test_tileset_resource(provider: Provider) -> None:
+    class Tileset:
+        def tiles(self, tile_ids: typing.Sequence[str]) -> list[typing.Any]:
+            return [(tid, None) for tid in tile_ids]
+
+        def info(self) -> typing.Any:
+            return "tile_info"
+
+    tileset = Tileset()
+    resource = provider.create(tileset)
+    assert isinstance(resource, TilesetResource)
+
+    resource_url = f"{resource.server}tileset_info/?d={resource.uid}"
+    info = requests.get(resource_url).json()
+    assert info[resource.uid] == "tile_info"
+    tile_url = resource_url.replace("tileset_info", "tiles") + ".0.0"
+    tiles = requests.get(tile_url).json()
+    assert f"{resource.uid}.0.0" in tiles
