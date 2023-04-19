@@ -1,11 +1,17 @@
 from __future__ import annotations
 
+import sys
 import threading
 import time
 
 import portpicker
 import uvicorn
 from starlette.types import ASGIApp
+
+if sys.version_info >= (3, 11):
+    from typing import Self
+else:
+    from typing_extensions import Self
 
 
 class BackgroundServer:
@@ -41,7 +47,7 @@ class BackgroundServer:
             raise RuntimeError("Server not running.")
         return self._port
 
-    def stop(self) -> BackgroundServer:
+    def stop(self) -> Self:
         """Stop the background server thread."""
         if self._server_thread is None:
             return self
@@ -63,7 +69,7 @@ class BackgroundServer:
         timeout: int = 1,
         daemon: bool = True,
         log_level: str = "warning",
-    ) -> BackgroundServer:
+    ) -> Self:
         """Start app in a background thread.
 
         Parameters
