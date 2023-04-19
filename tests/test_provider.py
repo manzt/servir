@@ -43,7 +43,9 @@ def test_file_content_type_json(provider: Provider, tmp_path: pathlib.Path):
 
 def test_file_content_type_csv(provider: Provider, tmp_path: pathlib.Path):
     path = tmp_path / "data.csv"
-    path.write_text("a,b,c\n1,2,3\n4,5,6")
+
+    with open(path, mode="w", newline="\n") as f:
+        f.write("a,b,c\n1,2,3\n4,5,6")
 
     server_resource = provider.create(path)
     response = requests.get(server_resource.url)
