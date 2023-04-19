@@ -195,6 +195,7 @@ def create_tileset_route(
     Mount
         The API route.
     """
+
     def middleware(app: ASGIApp) -> ASGIApp:
         """Middleware to inject tileset resources into request scope."""
 
