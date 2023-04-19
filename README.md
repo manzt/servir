@@ -1,9 +1,9 @@
 # bgserve
 
-an extensible async background server for python
-
 [![PyPI - Version](https://img.shields.io/pypi/v/bgserve.svg)](https://pypi.org/project/bgserve)
 [![PyPI - Python Version](https://img.shields.io/pypi/pyversions/bgserve.svg)](https://pypi.org/project/bgserve)
+
+an extensible async background server for python
 
 -----
 

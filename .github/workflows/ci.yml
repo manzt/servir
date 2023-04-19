@@ -55,22 +55,3 @@ jobs:
       - run: |
           pip install --upgrade hatch
           hatch run lint:style
-
-  Release:
-    # prevents this action from running on forks
-    if: ${{ github.repository == 'manzt/bgserve' && startsWith(github.ref, 'refs/tags') }}
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-python@v4
-        with:
-          python-version: "3.x"
-      - run: |
-          python -m pip install --upgrade pip
-          pip install build
-          python -m build
-      - name: Publish distribution 📦 to PyPI
-        uses: pypa/gh-action-pypi-publish@release/v1
-        with:
-          password: ${{ secrets.PYPI_API_TOKEN }}
-
