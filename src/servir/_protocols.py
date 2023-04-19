@@ -20,6 +20,11 @@ class ProviderProtocol(typing.Protocol):
 class TilesetProtocol(typing.Protocol):
     """Represents a HiGlass Tileset."""
 
+    @property
+    def uid(self) -> str:
+        """The unique identifier for this tileset."""
+        ...
+
     def tiles(self, tile_ids: typing.Sequence[str]) -> list[typing.Any]:
         """Get the tiles for the given tile IDs.
 

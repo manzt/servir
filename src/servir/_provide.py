@@ -15,14 +15,14 @@ from servir._resources import (
     create_resource,
     create_resource_route,
 )
-from servir._tilesets import TilesetResource, create_tileset_route
+from servir._tilesets import TilesetResource, TilesetType, create_tileset_route
 
 
 class Provider(BackgroundServer):
     """A server that provides resources to a client."""
 
     _resources: typing.MutableMapping[str, Resource]
-    _tilesets: typing.MutableMapping[str, TilesetResource]
+    _tilesets: typing.MutableMapping[str, TilesetResource[TilesetProtocol]]
 
     def __init__(self, proxy: bool = False):
         """Create a new Provider.
@@ -83,13 +83,13 @@ class Provider(BackgroundServer):
 
     @typing.overload
     def create(
-        self, tileset: TilesetProtocol, /, **kwargs: typing.Any
-    ) -> TilesetResource:
+        self, tileset: TilesetType, /, **kwargs: typing.Any
+    ) -> TilesetResource[TilesetType]:
         ...
 
     def create(
-        self, x: pathlib.Path | str | TilesetProtocol, /, **kwargs: typing.Any
-    ) -> Resource | TilesetResource:
+        self, x: pathlib.Path | str | TilesetType, /, **kwargs: typing.Any
+    ) -> Resource | TilesetResource[TilesetType]:
         """Create a resource from a path or tileset.
 
         Parameters
@@ -104,7 +104,7 @@ class Provider(BackgroundServer):
         Resource | TilesetResource
             The resource.
         """
-        resource: Resource | TilesetResource
+        resource: Resource | TilesetResource[TilesetProtocol]
 
         if not isinstance(x, (pathlib.Path, str)):
             resource = TilesetResource(x, provider=self, **kwargs)
@@ -114,4 +114,4 @@ class Provider(BackgroundServer):
             self._resources[resource.guid] = resource
 
         self.start()
-        return resource
+        return typing.cast(TilesetResource[TilesetType], resource)

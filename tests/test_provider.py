@@ -91,6 +91,10 @@ def test_directory_resource(provider: Provider, tmp_path: pathlib.Path) -> None:
 
 def test_tileset_resource(provider: Provider) -> None:
     class Tileset:
+        @property
+        def uid(self) -> str:
+            return "aaaaaaaaaa"
+
         def tiles(self, tile_ids: typing.Sequence[str]) -> list[typing.Any]:
             return [(tid, None) for tid in tile_ids]
 

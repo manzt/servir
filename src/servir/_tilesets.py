@@ -16,13 +16,13 @@ from servir._protocols import ProviderProtocol, TilesetProtocol
 
 _MOUNT_PATH = "/tilesets/api/v1/"
 
+TilesetType = typing.TypeVar("TilesetType", bound=TilesetProtocol)
 
-class TilesetResource:
+
+class TilesetResource(typing.Generic[TilesetType]):
     """A tileset resource."""
 
-    def __init__(
-        self, tileset: TilesetProtocol, provider: ProviderProtocol, uid: None | str = None
-    ):
+    def __init__(self, tileset: TilesetType, provider: ProviderProtocol):
         """Initialize a tileset resource.
 
         Parameters
@@ -31,23 +31,19 @@ class TilesetResource:
             The tileset.
         provider : ProviderProtocol
             The server provider.
-        uid : None | str, optional
-            The unique identifier for the tileset, by default None. If None, the
-            object id of the tileset instance will be used.
         """
         self._tileset = tileset
         self._provider = provider
-        self._uid = uid or str(id(tileset))
 
     @property
-    def tileset(self) -> TilesetProtocol:
+    def tileset(self) -> TilesetType:
         """The tileset."""
         return self._tileset
 
     @property
     def uid(self) -> str:
         """The unique identifier for the tileset."""
-        return self._uid
+        return self._tileset.uid
 
     @property
     def server(self) -> str:
@@ -75,7 +71,7 @@ def get_list(query: str, field: str) -> list[str]:
 
 
 def tileset_info(
-    request: Request, tilesets: typing.Mapping[str, TilesetResource]
+    request: Request, tilesets: typing.Mapping[str, TilesetResource[TilesetProtocol]]
 ) -> JSONResponse:
     """Request handler for the tileset_info/ endpoint.
 
@@ -102,7 +98,7 @@ def tileset_info(
 
 
 def tiles(
-    request: Request, tilesets: typing.Mapping[str, TilesetResource]
+    request: Request, tilesets: typing.Mapping[str, TilesetResource[TilesetProtocol]]
 ) -> JSONResponse:
     """Request handler for the tiles/ endpoint.
 
@@ -137,7 +133,7 @@ def tiles(
 
 
 def chromsizes(
-    request: Request, tilesets: typing.Mapping[str, TilesetResource]
+    request: Request, tilesets: typing.Mapping[str, TilesetResource[TilesetProtocol]]
 ) -> PlainTextResponse | JSONResponse:
     """Request handler for the chrom-sizes/ endpoint.
 
@@ -172,12 +168,12 @@ def chromsizes(
 
 
 TilesetEndpoint = typing.Callable[
-    [Request, typing.Mapping[str, TilesetResource]], Response
+    [Request, typing.Mapping[str, TilesetResource[TilesetProtocol]]], Response
 ]
 
 
 def create_tileset_route(
-    tileset_resources: typing.Mapping[str, TilesetResource],
+    tileset_resources: typing.Mapping[str, TilesetResource[TilesetProtocol]],
     scope_id: str = "tilesets",
 ) -> Mount:
     """Create a route for tileset endpoints.
