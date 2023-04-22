@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import pathlib
 import typing
+import weakref
 
 import pytest
 import requests
@@ -111,3 +112,27 @@ def test_tileset_resource(provider: Provider) -> None:
     tile_url = resource_url.replace("tileset_info", "tiles") + ".0.0"
     tiles = requests.get(tile_url).json()
     assert f"{resource.uid}.0.0" in tiles
+
+
+def test_resource_cleanup(provider: Provider) -> None:
+    # empty provider by default
+    assert not provider._resources
+
+    content = "hello, world"
+
+    resource1 = provider.create(content)
+    resource_ref = weakref.ref(resource1)
+    assert len(provider._resources) == 1
+
+    resource2 = provider.create(content)
+    assert resource1 == resource2
+    assert len(provider._resources) == 1
+
+    _resource3 = provider.create(content + "!")
+    assert len(provider._resources) == 2
+
+    # should trigger cleanup
+    del resource1
+    del resource2
+    assert len(provider._resources) == 1
+    assert resource_ref() is None
