@@ -12,11 +12,12 @@ from servir._provide import Provider
 from servir._tilesets import TilesetResource
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture
 def provider() -> typing.Iterator[Provider]:
     provider = Provider()
     yield provider
     provider.stop()
+    assert not provider._resources
 
 
 def test_files(provider: Provider, tmp_path: pathlib.Path) -> None:
@@ -115,9 +116,6 @@ def test_tileset_resource(provider: Provider) -> None:
 
 
 def test_resource_cleanup(provider: Provider) -> None:
-    # empty provider by default
-    assert not provider._resources
-
     content = "hello, world"
 
     resource1 = provider.create(content)
