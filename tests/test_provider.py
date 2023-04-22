@@ -3,22 +3,17 @@ from __future__ import annotations
 import json
 import pathlib
 import typing
+import weakref
 
-import pytest
 import requests
 
 from servir._provide import Provider
 from servir._tilesets import TilesetResource
 
 
-@pytest.fixture(scope="module")
-def provider() -> typing.Iterator[Provider]:
+def test_files(tmp_path: pathlib.Path) -> None:
     provider = Provider()
-    yield provider
-    provider.stop()
 
-
-def test_files(provider: Provider, tmp_path: pathlib.Path) -> None:
     with open(tmp_path / "hello.txt", "w") as f:
         f.write("hello, world")
 
@@ -31,7 +26,9 @@ def test_files(provider: Provider, tmp_path: pathlib.Path) -> None:
     assert response.status_code == 404
 
 
-def test_file_content_type_json(provider: Provider, tmp_path: pathlib.Path) -> None:
+def test_file_content_type_json(tmp_path: pathlib.Path) -> None:
+    provider = Provider()
+
     data = {"hello": "world"}
 
     with open(tmp_path / "hello.json", "w") as f:
@@ -43,7 +40,9 @@ def test_file_content_type_json(provider: Provider, tmp_path: pathlib.Path) -> N
     assert "application/json" in response.headers["Content-Type"]
 
 
-def test_file_content_type_csv(provider: Provider, tmp_path: pathlib.Path) -> None:
+def test_file_content_type_csv(tmp_path: pathlib.Path) -> None:
+    provider = Provider()
+
     path = tmp_path / "data.csv"
 
     with open(path, mode="w", newline="\n") as f:
@@ -55,7 +54,9 @@ def test_file_content_type_csv(provider: Provider, tmp_path: pathlib.Path) -> No
     assert "text/csv" in response.headers["Content-Type"]
 
 
-def test_content(provider: Provider) -> None:
+def test_content() -> None:
+    provider = Provider()
+
     content = "hello, world"
     str_resource = provider.create(content)
     response = requests.get(str_resource.url)
@@ -63,7 +64,8 @@ def test_content(provider: Provider) -> None:
     assert "text/plain" in response.headers["Content-Type"]
 
 
-def test_content_explicit_extension(provider: Provider) -> None:
+def test_content_explicit_extension() -> None:
+    provider = Provider()
     data = "a,b,c,\n1,2,3,\n4,5,6"
 
     content_resource = provider.create(data, extension=".csv")
@@ -72,7 +74,9 @@ def test_content_explicit_extension(provider: Provider) -> None:
     assert "text/csv" in response.headers["Content-Type"]
 
 
-def test_directory_resource(provider: Provider, tmp_path: pathlib.Path) -> None:
+def test_directory_resource(tmp_path: pathlib.Path) -> None:
+    provider = Provider()
+
     root = tmp_path / "data_dir"
     root.mkdir()
     (root / "hello.txt").write_text("hello, world")
@@ -89,7 +93,9 @@ def test_directory_resource(provider: Provider, tmp_path: pathlib.Path) -> None:
     assert response.text == "foo"
 
 
-def test_tileset_resource(provider: Provider) -> None:
+def test_tileset_resource() -> None:
+    provider = Provider()
+
     class Tileset:
         @property
         def uid(self) -> str:
@@ -111,3 +117,28 @@ def test_tileset_resource(provider: Provider) -> None:
     tile_url = resource_url.replace("tileset_info", "tiles") + ".0.0"
     tiles = requests.get(tile_url).json()
     assert f"{resource.uid}.0.0" in tiles
+
+
+def test_resource_cleanup() -> None:
+    provider = Provider()
+    assert not provider._resources
+
+    content = "hello, world"
+
+    resource1 = provider.create(content)
+    resource_ref = weakref.ref(resource1)
+    assert len(provider._resources) == 1
+
+    resource2 = provider.create(content)
+    assert resource1 == resource2
+    assert len(provider._resources) == 1
+
+    # should not trigger cleanup
+    del resource1
+    assert len(provider._resources) == 1
+    assert resource_ref() is resource2
+
+    # should trigger cleanup
+    del resource2
+    assert len(provider._resources) == 0
+    assert resource_ref() is None

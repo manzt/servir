@@ -63,6 +63,11 @@ assert response.text == data
 assert "text/csv" in response.headers["Content-Type"]
 ```
 
+> **Note**: the `Provider` holds a _weak reference_ to each resource it creates.
+> This allows the provider to cleanup unused resources and prevent memory leaks.
+> As an end user, you must hold a **strong** reference each resource returned
+> by the provider so long as you'd like that endpoint to remain avaiable.
+
 ## license
 
 `servir` is distributed under the terms of the [MIT](https://spdx.org/licenses/MIT.html) license.

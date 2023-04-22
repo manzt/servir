@@ -108,9 +108,14 @@ class Provider(BackgroundServer):
 
         if not isinstance(x, (pathlib.Path, str)):
             resource = TilesetResource(x, provider=self, **kwargs)
-            self._tilesets[resource.uid] = resource
+            if resource.uid in self._tilesets:
+                resource = self._tilesets[resource.uid]
+            else:
+                self._tilesets[resource.uid] = resource
         else:
             resource = create_resource(x, provider=self, **kwargs)
+            if resource.guid in self._resources:
+                resource = self._resources[resource.guid]
             self._resources[resource.guid] = resource
 
         self.start()
