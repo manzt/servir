@@ -5,7 +5,6 @@ import pathlib
 import typing
 import weakref
 
-import pytest
 import requests
 
 from servir._provide import Provider
@@ -134,11 +133,12 @@ def test_resource_cleanup() -> None:
     assert resource1 == resource2
     assert len(provider._resources) == 1
 
-    _resource3 = provider.create(content + "!")
-    assert len(provider._resources) == 2
+    # should not trigger cleanup
+    del resource1
+    assert len(provider._resources) == 1
+    assert resource_ref() is resource2
 
     # should trigger cleanup
-    del resource1
     del resource2
-    assert len(provider._resources) == 1
+    assert len(provider._resources) == 0
     assert resource_ref() is None
