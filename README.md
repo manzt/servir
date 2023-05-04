@@ -39,7 +39,7 @@ path.write_text("hello, world")
 file_resource = provider.create(path)
 response = requests.get(file_resource.url)
 assert response.text == "hello, world"
-assert "text/plain" in response.headers["Content-Type"] 
+assert "text/plain" in response.headers["Content-Type"]
 
 ### Directory (supports range requests)
 
@@ -53,7 +53,7 @@ assert response.text == "hello, world"
 assert "text/plain" in response.headers["Content-Type"]
 
 
-### In-memory
+### In-Memory
 
 data = "a,b,c,\n1,2,3,\n4,5,6"
 
