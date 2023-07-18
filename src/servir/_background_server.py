@@ -65,6 +65,8 @@ class BackgroundServer:
 
     def start(
         self,
+        *,
+        host: str = "127.0.0.1",
         port: int | None = None,
         timeout: int = 1,
         daemon: bool = True,
@@ -74,6 +76,10 @@ class BackgroundServer:
 
         Parameters
         ----------
+        host : str, optional
+            The host on which to bind the server. If not provided, the server will bind
+            to localhost (127.0.0.1). Use "0.0.0.0" to expose the server to the local
+            network. IPv6 addresses are supported.
         port : int, optional
             The port on which to run the server. If not provided, a random port will be
             selected.
@@ -94,6 +100,7 @@ class BackgroundServer:
 
         config = uvicorn.Config(
             app=self.app,
+            host=host,
             port=port or portpicker.pick_unused_port(),
             timeout_keep_alive=timeout,
             log_level=log_level,
