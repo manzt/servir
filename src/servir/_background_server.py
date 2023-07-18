@@ -66,7 +66,7 @@ class BackgroundServer:
     def start(
         self,
         *,
-        host : str = "127.0.0.1",
+        host: str = "127.0.0.1",
         port: int | None = None,
         timeout: int = 1,
         daemon: bool = True,
