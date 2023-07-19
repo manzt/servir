@@ -75,7 +75,7 @@ class BackgroundServer:
     def start(
         self,
         *,
-        host: str = "127.0.0.1",
+        host: str = "localhost",
         port: int | None = None,
         timeout: int = 1,
         daemon: bool = True,
@@ -87,8 +87,8 @@ class BackgroundServer:
         ----------
         host : str, optional
             The host on which to bind the server. If not provided, the server will bind
-            to localhost (127.0.0.1). Use "0.0.0.0" to expose the server to the local
-            network. IPv6 addresses are supported.
+            to localhost. You can use "0.0.0.0" to expose the server to the local network 
+            or use a hostname. IPv6 addresses are supported.
         port : int, optional
             The port on which to run the server. If not provided, a random port will be
             selected.
