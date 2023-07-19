@@ -18,6 +18,7 @@ class BackgroundServer:
     """A threading-based background server for Starlette apps."""
 
     _app: ASGIApp
+    _host: str | None
     _port: int | None
     _server_thread: threading.Thread | None
     _server: uvicorn.Server | None
@@ -31,6 +32,7 @@ class BackgroundServer:
             The Starlette app to run in the background.
         """
         self._app = app
+        self._host = None
         self._port = None
         self._server_thread = None
         self._server = None
@@ -39,6 +41,13 @@ class BackgroundServer:
     def app(self) -> ASGIApp:
         """The Starlette app being run in the background."""
         return self._app
+
+    @property
+    def host(self) -> str:
+        """The host to which the server is bound"""
+        if self._server_thread is None or self._host is None:
+            raise RuntimeError("Server not running")
+        return self._host
 
     @property
     def port(self) -> int:
@@ -106,6 +115,7 @@ class BackgroundServer:
             log_level=log_level,
         )
 
+        self._host = config.host
         self._port = config.port
         self._server = uvicorn.Server(config=config)
         self._server_thread = threading.Thread(target=self._server.run, daemon=daemon)
