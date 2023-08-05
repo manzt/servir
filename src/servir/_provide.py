@@ -75,7 +75,7 @@ class Provider(BackgroundServer):
             urlprefix = os.environ["JUPYTERHUB_SERVICE_PREFIX"]
             return f"{urlprefix}/proxy/{self.port}"
 
-        return f"http://localhost:{self.port}"
+        return f"http://{self.host}:{self.port}"
 
     @typing.overload
     def create(self, path: pathlib.Path | str, /, **kwargs: typing.Any) -> Resource:
