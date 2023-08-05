@@ -44,7 +44,7 @@ class BackgroundServer:
 
     @property
     def host(self) -> str:
-        """The host to which the server is bound"""
+        """The host to which the server is bound."""
         if self._server_thread is None or self._host is None:
             raise RuntimeError("Server not running")
         return self._host
@@ -87,7 +87,7 @@ class BackgroundServer:
         ----------
         host : str, optional
             The host on which to bind the server. If not provided, the server will bind
-            to localhost. You can use "0.0.0.0" to expose the server to the local network 
+            to localhost. You can use "0.0.0.0" to expose the server to the local network
             or use a hostname. IPv6 addresses are supported.
         port : int, optional
             The port on which to run the server. If not provided, a random port will be
