@@ -1,8 +1,5 @@
 name: Release
 
-permissions:
-  contents: write
-
 on:
   push:
     tags:
@@ -15,14 +12,13 @@ jobs:
     permissions:
       # IMPORTANT: this permission is mandatory for trusted publishing
       id-token: write
+      # For generating GitHub Releases + Release notes
+      # ref: https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#permissions
+      contents: write
     steps:
       - uses: actions/checkout@v3
         with:
           fetch-depth: 0
-
-      - uses: actions/setup-node@v3
-        with:
-          node-version: 16.x
 
       - uses: actions/setup-python@v4
         with:
@@ -35,6 +31,10 @@ jobs:
 
       - name: Publish distribution 📦 to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
+
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 18.x
 
       - run: npx changelogithub@0.12
         env:
