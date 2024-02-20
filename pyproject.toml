@@ -25,7 +25,7 @@ classifiers = [
 ]
 dependencies = [
     "portpicker",
-    "starlette>=0.26.1",
+    "starlette>=0.35",
     "typing-extensions>=4.5.0 ; python_version < '3.11'",
     "uvicorn>=0.21.1",
 ]
