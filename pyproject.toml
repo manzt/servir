@@ -10,9 +10,7 @@ readme = "README.md"
 requires-python = ">=3.8"
 license = { text = "MIT" }
 keywords = []
-authors = [
-  { name = "Trevor Manz", email = "trevor.j.manz@gmail.com" },
-]
+authors = [{ name = "Trevor Manz", email = "trevor.j.manz@gmail.com" }]
 classifiers = [
   "Development Status :: 4 - Beta",
   "Programming Language :: Python",
@@ -24,11 +22,14 @@ classifiers = [
   "Programming Language :: Python :: Implementation :: PyPy",
 ]
 dependencies = [
-    "portpicker",
-    "starlette>=0.26.1",
-    "typing-extensions>=4.5.0 ; python_version < '3.11'",
-    "uvicorn>=0.21.1",
+  "portpicker",
+  "starlette>=0.35",
+  "typing-extensions>=4.5.0 ; python_version < '3.11'",
+  "uvicorn>=0.21.1",
 ]
+[project.optional-dependencies]
+dev = ["coverage[toml]>=6.5", "mypy>=1.0.0", "pytest", "requests", "ruff"]
+
 
 [project.urls]
 Documentation = "https://github.com/unknown/servir#readme"
@@ -39,71 +40,47 @@ Source = "https://github.com/unknown/servir"
 source = "vcs"
 
 [tool.hatch.envs.default]
-dependencies = [
-  "coverage[toml]>=6.5",
-  "mypy>=1.0.0",
-  "pytest",
-  "requests",
-]
+features = ["dev"]
+
 [tool.hatch.envs.default.scripts]
 typing = "mypy --strict --install-types --non-interactive {args:src/servir tests}"
 test = "pytest {args:tests}"
 test-cov = "coverage run -m pytest {args:tests}"
-cov-report = [
-  "- coverage combine",
-  "coverage report",
+cov-report = ["- coverage combine", "coverage report"]
+cov = ["test-cov", "cov-report"]
+lint = [
+  "ruff {args:.}",
+  "ruff format --check --diff {args:.}",
 ]
-cov = [
-  "test-cov",
-  "cov-report",
+fmt = [
+  "ruff format {args:.}",
+  "ruff --fix {args:.}",
 ]
 
 [[tool.hatch.envs.all.matrix]]
 python = ["3.8", "3.9", "3.10", "3.11"]
 
-[tool.hatch.envs.lint]
-detached = true
-dependencies = [
-  "black>=23.1.0",
-  "ruff>=0.0.243",
-]
-[tool.hatch.envs.lint.scripts]
-style = [
-  "ruff {args:.}",
-  "black --check --diff {args:.}",
-]
-fmt = [
-  "black {args:.}",
-  "ruff --fix {args:.}",
-  "style",
-]
-all = [
-  "style",
-]
-
-[tool.black]
-target-version = ["py37"]
-line-length = 90
-
 [tool.ruff]
 line-length = 90
 target-version = "py37"
+
+[tool.ruff.lint]
 extend-select = [
-    "E",    # style errors
-    "F",    # flake8
-    "D",    # pydocstyle
-    "I",    # isort
-    "UP",   # pyupgrade
-    "RUF",  # ruff-specific rules
+  "E",   # style errors
+  "F",   # flake8
+  "D",   # pydocstyle
+  "I",   # isort
+  "UP",  # pyupgrade
+  "RUF", # ruff-specific rules
 ]
 
-[tool.ruff.pydocstyle]
+[tool.ruff.lint.pydocstyle]
 convention = "numpy"
 
-[tool.ruff.isort]
+[tool.ruff.lint.isort]
 known-first-party = ["servir"]
 
-[tool.ruff.per-file-ignores]
+[tool.ruff.lint.per-file-ignores]
 "src/servir/__init__.py" = ["E402"]
 "tests/*.py" = ["D", "S101"]
 
@@ -119,12 +96,12 @@ tests = ["tests", "*/servir/tests"]
 # https://coverage.readthedocs.io/en/6.4/config.html
 [tool.coverage.report]
 exclude_lines = [
-    "pragma: no cover",
-    "if TYPE_CHECKING:",
-    "@overload",
-    "except ImportError",
-    "\\.\\.\\.",
-    "raise NotImplementedError()"
+  "pragma: no cover",
+  "if TYPE_CHECKING:",
+  "@overload",
+  "except ImportError",
+  "\\.\\.\\.",
+  "raise NotImplementedError()",
 ]
 
 [[tool.mypy.overrides]]
