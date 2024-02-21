@@ -54,4 +54,4 @@ jobs:
           python-version: "3.x"
       - run: |
           pip install --upgrade hatch
-          hatch run lint:style
+          hatch run lint

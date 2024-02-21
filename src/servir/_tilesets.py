@@ -1,9 +1,9 @@
 from __future__ import annotations
 
-import functools
 import itertools
 import typing
 
+from starlette.middleware import Middleware
 from starlette.requests import Request
 from starlette.responses import JSONResponse, PlainTextResponse, Response
 from starlette.routing import Mount, Route
@@ -192,15 +192,15 @@ def create_tileset_route(
         The API route.
     """
 
-    def middleware(app: ASGIApp) -> ASGIApp:
+    class TilesetMiddleware:
         """Middleware to inject tileset resources into request scope."""
 
-        @functools.wraps(app)
-        async def wrapped_app(scope: Scope, receive: Receive, send: Send) -> None:
-            scope[scope_id] = tileset_resources
-            await app(scope, receive, send)
+        def __init__(self, app: ASGIApp) -> None:
+            self.app = app
 
-        return wrapped_app
+        async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
+            scope[scope_id] = tileset_resources
+            await self.app(scope, receive, send)
 
     def inject_tilesets(func: TilesetEndpoint) -> typing.Callable[[Request], Response]:
         """Inject tileset resources as secondrequest handler."""
@@ -217,5 +217,5 @@ def create_tileset_route(
             Route("/tiles/", inject_tilesets(tiles)),
             Route("/chrom-sizes/", inject_tilesets(chromsizes)),
         ],
-        middleware=[(middleware, {})],  # type: ignore
+        middleware=[Middleware(TilesetMiddleware)],
     )
