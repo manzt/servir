@@ -11,7 +11,7 @@ from servir._util import (
     create_resource_identifier,
     guess_media_type,
     md5,
-    read_file_blocks,
+    read_file_byte_range,
 )
 
 
@@ -58,7 +58,7 @@ def test_read_file_blocks(
 ) -> None:
     test_file = tmp_path / "test.txt"
     test_file.write_text("test")
-    assert b"".join(read_file_blocks(test_file, start, end)) == expected
+    assert read_file_byte_range(test_file, start, end) == expected
 
 
 @pytest.mark.parametrize(

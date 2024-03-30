@@ -46,49 +46,10 @@ def create_resource_identifier(data: str | bytes, id: str) -> str:
     return f"{md5(data)[:7]}-{id}"
 
 
-def read_file_blocks(
-    path: pathlib.Path,
-    start: int = 0,
-    end: None | int = None,
-    block_size: int = 65535,
-) -> typing.Iterator[bytes]:
-    """Read content range as generator from file object.
-
-    Adapted from https://gist.github.com/tombulled/712fd8e19ed0618c5f9f7d5f5f543782
-
-    Parameters
-    ----------
-    path : pathlib.Path
-        The path to the file.
-    start : int, optional
-        The start of the byte-range (default 0)
-    end : None | int, optional
-        The end of the desired byte-range. If None, the end of the file is assumed.
-    block_size : int, optional
-        The block size to read, by default 65535
-
-    Yields
-    ------
-    bytes
-        The content range.
-    """
-    consumed = 0
-
-    file = path.open("rb")
-    file.seek(start)
-
-    while True:
-        data_length = min(block_size, end - start - consumed) if end else block_size
-        if data_length <= 0:
-            break
-        data = file.read(data_length)
-        if not data:
-            break
-        consumed += data_length
-        yield data
-
-    if hasattr(file, "close"):
-        file.close()
+def read_file_byte_range(path: pathlib.Path, start: int, end: int) -> bytes:
+    with path.open("rb") as file:
+        file.seek(start)
+        return file.read(end - start)
 
 
 @dataclasses.dataclass(frozen=True)
@@ -139,20 +100,22 @@ def create_streaming_file_response(
         status_code = 200
         headers = {
             **(headers or {}),
-            "Content-Length": str(file_size),
         }
+        content = path.read_bytes()
     else:
         status_code = 206
         start, end = (content_range.start, content_range.end or file_size - 1)
         headers = {
             **(headers or {}),
-            "Content-Length": str((end - start) + 1),
+            "Content-Range": f"bytes {start}-{end}/{file_size}",
             "Accept-Ranges": "bytes",
-            "range": f"bytes {start}-{end}/{file_size}",
         }
+        content = read_file_byte_range(path, start=start, end=end + 1)
+
+    headers["Content-Length"] = str(len(content))
 
     return StreamingResponse(
-        content=read_file_blocks(path, start=start, end=end + 1),
+        content=[content],
         media_type=media_type,
         status_code=status_code,
         headers=headers,

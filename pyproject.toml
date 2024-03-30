@@ -49,12 +49,12 @@ test-cov = "coverage run -m pytest {args:tests}"
 cov-report = ["- coverage combine", "coverage report"]
 cov = ["test-cov", "cov-report"]
 lint = [
-  "ruff {args:.}",
+  "ruff check {args:.}",
   "ruff format --check --diff {args:.}",
 ]
 fmt = [
   "ruff format {args:.}",
-  "ruff --fix {args:.}",
+  "ruff check --fix {args:.}",
 ]
 
 [[tool.hatch.envs.all.matrix]]
