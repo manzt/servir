@@ -78,14 +78,12 @@ class Provider(BackgroundServer):
         return f"http://{self.host}:{self.port}"
 
     @typing.overload
-    def create(self, path: pathlib.Path | str, /, **kwargs: typing.Any) -> Resource:
-        ...
+    def create(self, path: pathlib.Path | str, /, **kwargs: typing.Any) -> Resource: ...
 
     @typing.overload
     def create(
         self, tileset: TilesetType, /, **kwargs: typing.Any
-    ) -> TilesetResource[TilesetType]:
-        ...
+    ) -> TilesetResource[TilesetType]: ...
 
     def create(
         self, x: pathlib.Path | str | TilesetType, /, **kwargs: typing.Any
