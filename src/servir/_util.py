@@ -46,7 +46,7 @@ def create_resource_identifier(data: str | bytes, id: str) -> str:
     return f"{md5(data)[:7]}-{id}"
 
 
-def read_single_byte_range(path: pathlib.Path, start: int, end: int) -> bytes:
+def read_file_byte_range(path: pathlib.Path, start: int, end: int) -> bytes:
     with path.open("rb") as file:
         file.seek(start)
         return file.read(end - start)
@@ -101,6 +101,7 @@ def create_streaming_file_response(
         headers = {
             **(headers or {}),
         }
+        content = path.read_bytes()
     else:
         status_code = 206
         start, end = (content_range.start, content_range.end or file_size - 1)
@@ -109,12 +110,12 @@ def create_streaming_file_response(
             "Content-Range": f"bytes {start}-{end}/{file_size}",
             "Accept-Ranges": "bytes",
         }
+        content = read_file_byte_range(path, start=start, end=end + 1)
 
-    bcontent = read_single_byte_range(path, start=start, end=end + 1)
-    headers["Content-Length"] = str(len(bcontent))
+    headers["Content-Length"] = str(len(content))
 
     return StreamingResponse(
-        content=[bcontent],
+        content=[content],
         media_type=media_type,
         status_code=status_code,
         headers=headers,
