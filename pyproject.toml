@@ -32,9 +32,9 @@ dev = ["coverage[toml]>=6.5", "mypy>=1.0.0", "pytest", "requests", "ruff"]
 
 
 [project.urls]
-Documentation = "https://github.com/unknown/servir#readme"
-Issues = "https://github.com/unknown/servir/issues"
-Source = "https://github.com/unknown/servir"
+Documentation = "https://github.com/manzt/servir#readme"
+Issues = "https://github.com/manzt/servir/issues"
+Source = "https://github.com/manzt/servir"
 
 [tool.hatch.version]
 source = "vcs"
